@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go version:*)",
+      "Bash(go build:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(go get:*)",
+      "Bash(.rdr.exe --help)",
+      "Bash(go install:*)",
+      "Bash(go generate:*)",
+      "Bash(./rdr.exe:*)",
+      "Bash(taskkill:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}

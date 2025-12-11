@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>解析中 - RDR Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #00ff00;
+            font-family: 'Courier New', 'Consolas', monospace;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .terminal-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+        }
+
+        .terminal-header {
+            background: #1a1a1a;
+            padding: 10px 20px;
+            border-bottom: 2px solid #00ff00;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal-title {
+            font-size: 16px;
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .terminal-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .btn-red { background: #ff5f56; }
+        .btn-yellow { background: #ffbd2e; }
+        .btn-green { background: #27c93f; }
+
+        .terminal-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .prompt {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .timestamp {
+            color: #666;
+        }
+
+        .info {
+            color: #00bfff;
+        }
+
+        .success {
+            color: #00ff00;
+        }
+
+        .warning {
+            color: #ffaa00;
+        }
+
+        .error {
+            color: #ff4444;
+        }
+
+        .progress-bar-container {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #333;
+            background: #0a0a0a;
+        }
+
+        .progress-label {
+            color: #00bfff;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #1a1a1a;
+            border: 1px solid #00ff00;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #00aa00);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-parsing {
+            background: #ffaa00;
+        }
+
+        .status-completed {
+            background: #00ff00;
+        }
+
+        .status-error {
+            background: #ff4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #00ff00;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+
+        .command-line {
+            color: #00ff00;
+            margin: 10px 0;
+        }
+
+        .ascii-art {
+            color: #00ff00;
+            font-size: 10px;
+            line-height: 1.2;
+            margin: 20px 0;
+        }
+
+        .redirect-button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .redirect-button:hover {
+            background: #00aa00;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00ff00;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00aa00;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="terminal-title">
+                <span class="status-indicator status-parsing" id="statusIndicator"></span>
+                RDR Terminal - Parsing RDB File
+            </div>
+            <div class="terminal-buttons">
+                <div class="terminal-button btn-red"></div>
+                <div class="terminal-button btn-yellow"></div>
+                <div class="terminal-button btn-green"></div>
+            </div>
+        </div>
+
+        <div class="terminal-body" id="terminalBody">
+            <div class="ascii-art">
+╔═══════════════════════════════════════════════════════════════╗
+║                    RDR - Redis Data Reveal                    ║
+║                     File Analysis System                      ║
+╚═══════════════════════════════════════════════════════════════╝
+            </div>
+
+            <div class="command-line">
+                <span class="prompt">root@rdr:~$</span> rdr parse <span id="filename"></span>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-label">
+                    <span id="progressLabel">Initializing...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%">
+                        <span id="progressText">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="logs"></div>
+
+            <div id="completionSection" style="display: none;">
+                <div class="terminal-line success">
+                    ╔═══════════════════════════════════════════════════════════════╗
+                    ║                    ✓ PARSING COMPLETED                        ║
+                    ╚═══════════════════════════════════════════════════════════════╝
+                </div>
+                <div class="terminal-line">
+                    <button class="redirect-button" id="viewResultsBtn">
+                        View Analysis Results >>
+                    </button>
+                </div>
+            </div>
+
+            <div class="terminal-line">
+                <span class="prompt">></span><span class="cursor"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const filename = window.location.pathname.split('/').pop();
+        document.getElementById('filename').textContent = filename;
+
+        const terminalBody = document.getElementById('terminalBody');
+        const logsContainer = document.getElementById('logs');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const progressLabel = document.getElementById('progressLabel');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const completionSection = document.getElementById('completionSection');
+        const viewResultsBtn = document.getElementById('viewResultsBtn');
+
+        let autoScroll = true;
+
+        // Add log line
+        function addLog(message, type = 'info') {
+            const line = document.createElement('div');
+            line.className = 'terminal-line ' + type;
+            line.textContent = message;
+            logsContainer.appendChild(line);
+
+            if (autoScroll) {
+                terminalBody.scrollTop = terminalBody.scrollHeight;
+            }
+        }
+
+        // Update progress
+        function updateProgress(progress, step) {
+            progressFill.style.width = progress + '%';
+            progressText.textContent = progress + '%';
+            if (step) {
+                progressLabel.textContent = step;
+            }
+        }
+
+        // Check if we should use SSE or polling
+        const useSSE = true; // Server-Sent Events for real-time logs
+
+        if (useSSE) {
+            // Use Server-Sent Events for real-time updates
+            const eventSource = new EventSource('/api/stream/' + filename);
+
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+
+                    if (data.type === 'log') {
+                        addLog(data.message, 'info');
+                    } else if (data.type === 'progress') {
+                        updateProgress(data.progress, data.status);
+
+                        // Update status indicator
+                        statusIndicator.className = 'status-indicator';
+                        if (data.status === 'completed') {
+                            statusIndicator.classList.add('status-completed');
+                            completionSection.style.display = 'block';
+                            eventSource.close();
+                        } else if (data.status === 'error') {
+                            statusIndicator.classList.add('status-error');
+                            addLog('ERROR: Parsing failed', 'error');
+                            eventSource.close();
+                        } else {
+                            statusIndicator.classList.add('status-parsing');
+                        }
+                    }
+                } catch (e) {
+                    console.error('Parse error:', e);
+                }
+            };
+
+            eventSource.onerror = function() {
+                console.log('SSE connection lost, switching to polling...');
+                eventSource.close();
+                startPolling();
+            };
+        } else {
+            startPolling();
+        }
+
+        // Fallback: Polling
+        function startPolling() {
+            const pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/progress/' + filename);
+                    if (!response.ok) {
+                        clearInterval(pollInterval);
+                        // Redirect to result page
+                        window.location.href = '/instance/' + filename;
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    updateProgress(data.progress, data.currentStep);
+
+                    if (data.status === 'completed') {
+                        clearInterval(pollInterval);
+                        completionSection.style.display = 'block';
+                        statusIndicator.className = 'status-indicator status-completed';
+                    } else if (data.status === 'error') {
+                        clearInterval(pollInterval);
+                        addLog('ERROR: ' + data.error, 'error');
+                        statusIndicator.className = 'status-indicator status-error';
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 1000);
+        }
+
+        // View results button
+        viewResultsBtn.addEventListener('click', () => {
+            window.location.href = '/instance/' + filename;
+        });
+
+        // Initial logs
+        addLog('==> Initializing RDB parser...', 'info');
+        addLog('==> Loading file: ' + filename, 'info');
+        addLog('==> Starting decode process...', 'info');
+    </script>
+</body>
+</html>

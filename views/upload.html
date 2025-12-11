@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RDB File Analyzer</title>
+    <link rel="stylesheet" href="/static/bootstrap/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .upload-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9ff;
+        }
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+            transform: translateY(-5px);
+        }
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+        .upload-icon {
+            font-size: 64px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .upload-text {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .upload-hint {
+            color: #666;
+            font-size: 14px;
+        }
+        .file-input {
+            display: none;
+        }
+        .file-list {
+            margin-top: 30px;
+        }
+        .file-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-info {
+            flex: 1;
+        }
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .file-size {
+            color: #666;
+            font-size: 14px;
+        }
+        .progress {
+            height: 8px;
+            margin-top: 10px;
+            border-radius: 10px;
+        }
+        .btn-analyze {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 10px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-analyze:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .analysis-status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            display: none;
+        }
+        .status-message {
+            color: #1976d2;
+            font-weight: 600;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo-text {
+            font-size: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <div class="logo">
+            <div class="logo-text">RDR</div>
+        </div>
+        <h1>Redis RDB Analyzer</h1>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">拖拽RDB文件到这里</div>
+            <div class="upload-hint">或点击选择文件上传</div>
+            <input type="file" id="fileInput" class="file-input" accept=".rdb" multiple>
+        </div>
+
+        <div class="file-list" id="fileList"></div>
+
+        <button class="btn btn-analyze" id="analyzeBtn" disabled>开始分析</button>
+
+        <div class="analysis-status" id="analysisStatus">
+            <div class="status-message" id="statusMessage">准备中...</div>
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                     role="progressbar"
+                     style="width: 0%"
+                     id="progressBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const analysisStatus = document.getElementById('analysisStatus');
+        const statusMessage = document.getElementById('statusMessage');
+        const progressBar = document.getElementById('progressBar');
+
+        let selectedFiles = [];
+
+        // Click to select file
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            selectedFiles = Array.from(files).filter(file =>
+                file.name.endsWith('.rdb')
+            );
+
+            if (selectedFiles.length === 0) {
+                alert('请选择有效的.rdb文件');
+                return;
+            }
+
+            displayFiles();
+            analyzeBtn.disabled = false;
+        }
+
+        function displayFiles() {
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${formatBytes(file.size)}</div>
+                    </div>
+                    <button class="btn btn-sm btn-danger" onclick="removeFile(${index})">移除</button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            displayFiles();
+            if (selectedFiles.length === 0) {
+                analyzeBtn.disabled = true;
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        analyzeBtn.addEventListener('click', () => {
+            if (selectedFiles.length === 0) return;
+
+            analyzeBtn.disabled = true;
+            analysisStatus.style.display = 'block';
+            statusMessage.textContent = '正在上传文件...';
+            progressBar.style.width = '5%';
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('files', file);
+            });
+
+            // Use XMLHttpRequest for better control and progress tracking
+            const xhr = new XMLHttpRequest();
+
+            // Upload progress
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    const uploadPercent = Math.min(percentComplete * 0.7, 70); // 0-70% for upload
+                    progressBar.style.width = uploadPercent + '%';
+                    statusMessage.textContent = `正在上传文件... ${Math.round(percentComplete)}%`;
+                }
+            });
+
+            // Upload complete
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+
+                        if (result.success) {
+                            statusMessage.textContent = '文件上传成功，正在解析...';
+                            progressBar.style.width = '75%';
+
+                            // Redirect to analysis page (will show loading screen if not ready)
+                            setTimeout(() => {
+                                statusMessage.textContent = '正在跳转到结果页面...';
+                                progressBar.style.width = '100%';
+
+                                setTimeout(() => {
+                                    if (result.instances && result.instances.length > 0) {
+                                        // Redirect to instance page (will auto-refresh if parsing not complete)
+                                        window.location.href = '/instance/' + result.instances[0];
+                                    } else {
+                                        window.location.href = '/';
+                                    }
+                                }, 500);
+                            }, 1000); // Quick redirect, let the loading page handle waiting
+                        } else {
+                            throw new Error(result.message || '上传失败');
+                        }
+                    } catch (error) {
+                        statusMessage.textContent = '上传失败: ' + error.message;
+                        progressBar.style.width = '0%';
+                        analyzeBtn.disabled = false;
+                        console.error('Upload error:', error);
+                    }
+                } else {
+                    statusMessage.textContent = '上传失败: HTTP ' + xhr.status;
+                    progressBar.style.width = '0%';
+                    analyzeBtn.disabled = false;
+                }
+            });
+
+            // Upload error
+            xhr.addEventListener('error', () => {
+                statusMessage.textContent = '上传失败: 网络错误，请检查文件大小和网络连接';
+                progressBar.style.width = '0%';
+                analyzeBtn.disabled = false;
+            });
+
+            // Upload timeout
+            xhr.addEventListener('timeout', () => {
+                statusMessage.textContent = '上传超时: 文件太大或网络太慢，请稍后重试';
+                progressBar.style.width = '0%';
+                analyzeBtn.disabled = false;
+            });
+
+            // Set timeout to 30 minutes for large files
+            xhr.timeout = 30 * 60 * 1000;
+
+            // Send request
+            xhr.open('POST', '/api/upload', true);
+            xhr.send(formData);
+        });
+    </script>
+</body>
+</html>
