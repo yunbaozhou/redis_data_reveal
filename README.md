@@ -11,7 +11,7 @@ Now you can upload and analyze RDB files directly through a web browser!
 
 ```bash
 # Start the web server
-./rdr web -p 8080
+./rdr.exe web -p 8081
 
 # Open http://localhost:8080 in your browser
 # Drag & drop your .rdb files or click to upload
