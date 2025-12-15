@@ -1,0 +1,485 @@
+<div class="content-wrapper" style="min-height: 100px; height: auto; overflow: visible; width: 100%;">
+    <!-- Health Score Card -->
+    <div class="col-md-12" style="width: 100%; padding-left: 0; padding-right: 0;">
+        <div class="box" id="healthScoreBox" style="border-top: 3px solid #00a65a;">
+            <div class="box-header with-border">
+                <h3 class="box-title">
+                    <i class="fa fa-heartbeat"></i> System Health Score
+                </h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-md-6 text-center">
+                        <div id="healthScoreGauge" style="height: 250px;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="healthSummary" style="padding: 20px;">
+                            <h4>Health Summary</h4>
+                            <div id="healthDetails">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anomalies Section -->
+    <div class="col-md-12" style="width: 100%; padding-left: 0; padding-right: 0; clear: both;">
+        <div class="box box-danger">
+            <div class="box-header with-border">
+                <h3 class="box-title">
+                    <i class="fa fa-exclamation-triangle"></i> Detected Issues & Anomalies
+                </h3>
+                <span class="label label-danger pull-right" id="anomalyCount">0</span>
+            </div>
+            <div class="box-body">
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab-critical" data-toggle="tab">
+                            <span class="label label-danger" id="criticalCount">0</span> Critical
+                        </a></li>
+                        <li><a href="#tab-warnings" data-toggle="tab">
+                            <span class="label label-warning" id="warningCount">0</span> Warnings
+                        </a></li>
+                        <li><a href="#tab-info" data-toggle="tab">
+                            <span class="label label-info" id="infoCount">0</span> Info
+                        </a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tab-critical">
+                            <div id="criticalAnomalies"></div>
+                        </div>
+                        <div class="tab-pane" id="tab-warnings">
+                            <div id="warningAnomalies"></div>
+                        </div>
+                        <div class="tab-pane" id="tab-info">
+                            <div id="infoAnomalies"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Memory Hotspots -->
+    <div class="col-md-12" style="width: 100%; padding-left: 0; padding-right: 0; clear: both;">
+        <div class="box box-warning">
+            <div class="box-header with-border">
+                <h3 class="box-title">
+                    <i class="fa fa-fire"></i> Memory Hotspots
+                </h3>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table class="table table-condensed table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Identifier</th>
+                                <th>Memory Used</th>
+                                <th>Key Count</th>
+                                <th>Percentage</th>
+                                <th>Avg Size</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hotspotsTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="memoryHotspotsChart" class="memory-hotspots-chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="col-md-12" style="width: 100%; padding-left: 0; padding-right: 0; clear: both;">
+        <div class="box box-success">
+            <div class="box-header with-border">
+                <h3 class="box-title">
+                    <i class="fa fa-lightbulb-o"></i> Optimization Recommendations
+                </h3>
+                <span class="label label-success pull-right" id="recommendationCount">0</span>
+            </div>
+            <div class="box-body">
+                <div id="recommendationsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Patterns Analysis -->
+    <div class="col-md-6" style="width: 50%; float: left; padding-left: 0; padding-right: 7.5px;">
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">
+                    <i class="fa fa-key"></i> Top Key Patterns
+                </h3>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table class="table table-condensed table-hover">
+                        <thead>
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Count</th>
+                                <th>Memory</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keyPatternsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Type Efficiency -->
+    <div class="col-md-6" style="width: 50%; float: left; padding-left: 7.5px; padding-right: 0;">
+        <div class="box box-info">
+            <div class="box-header with-border">
+                <h3 class="box-title">
+                    <i class="fa fa-database"></i> Data Type Efficiency
+                </h3>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table class="table table-condensed table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Avg Size</th>
+                                <th>P95 Size</th>
+                                <th>Efficiency</th>
+                            </tr>
+                        </thead>
+                        <tbody id="typeEfficiencyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .anomaly-card {
+        border-left: 4px solid;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: #f9f9f9;
+        border-radius: 4px;
+    }
+    .anomaly-card.critical {
+        border-left-color: #dd4b39;
+        background: #fff5f5;
+    }
+    .anomaly-card.warning {
+        border-left-color: #f39c12;
+        background: #fffbf0;
+    }
+    .anomaly-card.info {
+        border-left-color: #00c0ef;
+        background: #f0f9ff;
+    }
+    .anomaly-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    .anomaly-meta {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 10px;
+    }
+    .anomaly-impact {
+        background: #fff;
+        padding: 10px;
+        border-radius: 3px;
+        margin-top: 10px;
+        border-left: 3px solid #3c8dbc;
+    }
+    .anomaly-suggestion {
+        background: #fff;
+        padding: 10px;
+        border-radius: 3px;
+        margin-top: 5px;
+        border-left: 3px solid #00a65a;
+    }
+
+    .recommendation-card {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        background: #fff;
+    }
+    .recommendation-card .priority {
+        float: right;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        font-weight: bold;
+        color: white;
+    }
+    .recommendation-card .priority-1 { background: #dd4b39; }
+    .recommendation-card .priority-2 { background: #f39c12; }
+    .recommendation-card .priority-3 { background: #00c0ef; }
+    .recommendation-card .priority-4 { background: #00a65a; }
+    .recommendation-card .priority-5 { background: #999; }
+
+    .badge-effort {
+        font-size: 11px;
+        padding: 3px 8px;
+    }
+    .badge-effort.low { background: #00a65a; }
+    .badge-effort.medium { background: #f39c12; }
+    .badge-effort.high { background: #dd4b39; }
+
+    #healthScoreGauge {
+        position: relative;
+        text-align: center;
+        padding-top: 40px;
+    }
+    .health-score-value {
+        font-size: 72px;
+        font-weight: bold;
+        line-height: 1;
+    }
+    .health-score-label {
+        font-size: 18px;
+        color: #666;
+        margin-top: 10px;
+    }
+
+    /* Layout fixes */
+    .memory-hotspots-chart {
+        height: 400px;
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    .content-wrapper > div[class*="col-"] {
+        margin-bottom: 20px;
+    }
+
+    .content-wrapper::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+</style>
+
+<script>
+(function() {
+    // Get instance name from URL
+    const pathParts = window.location.pathname.split('/');
+    const instanceName = pathParts[pathParts.length - 1];
+
+    // Load ops analysis data
+    fetch(`/api/ops/analysis/${instanceName}`)
+        .then(response => response.json())
+        .then(data => {
+            renderHealthScore(data.health_score, data.basic_stats);
+            renderAnomalies(data.anomalies);
+            renderMemoryHotspots(data.memory_hotspots);
+            renderRecommendations(data.recommendations);
+            renderKeyPatterns(data.key_patterns);
+            renderTypeEfficiency(data.type_efficiency);
+        })
+        .catch(error => {
+            console.error('Error loading ops analysis:', error);
+        });
+
+    function renderHealthScore(score, stats) {
+        const gaugeDiv = document.getElementById('healthScoreGauge');
+        const detailsDiv = document.getElementById('healthDetails');
+        const boxDiv = document.getElementById('healthScoreBox');
+
+        // Determine color and status
+        let color, status, borderColor;
+        if (score >= 90) {
+            color = '#00a65a'; status = 'Excellent'; borderColor = '#00a65a';
+        } else if (score >= 75) {
+            color = '#00c0ef'; status = 'Good'; borderColor = '#00c0ef';
+        } else if (score >= 60) {
+            color = '#f39c12'; status = 'Fair'; borderColor = '#f39c12';
+        } else if (score >= 40) {
+            color = '#ff851b'; status = 'Poor'; borderColor = '#ff851b';
+        } else {
+            color = '#dd4b39'; status = 'Critical'; borderColor = '#dd4b39';
+        }
+
+        boxDiv.style.borderTopColor = borderColor;
+
+        gaugeDiv.innerHTML = `
+            <div class="health-score-value" style="color: ${color};">${score}</div>
+            <div class="health-score-label">Health Score</div>
+            <div style="margin-top: 10px; font-size: 20px; font-weight: 600; color: ${color};">${status}</div>
+        `;
+
+        detailsDiv.innerHTML = `
+            <div style="margin-bottom: 15px;">
+                <strong>Status:</strong> <span style="color: ${color}; font-weight: 600;">${status}</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <strong>Total Keys:</strong> ${formatNumber(stats.total_keys)}
+            </div>
+            <div style="margin-bottom: 10px;">
+                <strong>Total Memory:</strong> ${formatBytes(stats.total_bytes)}
+            </div>
+            <div style="margin-bottom: 10px;">
+                <strong>Avg Key Size:</strong> ${formatBytes(Math.round(stats.avg_key_size))}
+            </div>
+        `;
+    }
+
+    function renderAnomalies(anomalies) {
+        const critical = anomalies.filter(a => a.level === 'critical');
+        const warnings = anomalies.filter(a => a.level === 'warning');
+        const info = anomalies.filter(a => a.level === 'info');
+
+        document.getElementById('anomalyCount').textContent = anomalies.length;
+        document.getElementById('criticalCount').textContent = critical.length;
+        document.getElementById('warningCount').textContent = warnings.length;
+        document.getElementById('infoCount').textContent = info.length;
+
+        renderAnomalyList('criticalAnomalies', critical);
+        renderAnomalyList('warningAnomalies', warnings);
+        renderAnomalyList('infoAnomalies', info);
+    }
+
+    function renderAnomalyList(elementId, anomalies) {
+        const div = document.getElementById(elementId);
+        if (anomalies.length === 0) {
+            div.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No issues detected</p>';
+            return;
+        }
+
+        div.innerHTML = anomalies.map(a => `
+            <div class="anomaly-card ${a.level}">
+                <div class="anomaly-title">${escapeHtml(a.title)}</div>
+                <div class="anomaly-meta">
+                    <span class="label label-${a.level === 'critical' ? 'danger' : a.level === 'warning' ? 'warning' : 'info'}">
+                        ${a.category}
+                    </span>
+                    ${a.value ? `<strong>Value:</strong> ${escapeHtml(a.value)}` : ''}
+                </div>
+                <div>${escapeHtml(a.description)}</div>
+                ${a.impact ? `<div class="anomaly-impact"><strong>Impact:</strong> ${escapeHtml(a.impact)}</div>` : ''}
+                ${a.suggestion ? `<div class="anomaly-suggestion"><strong>Suggestion:</strong> ${escapeHtml(a.suggestion)}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function renderMemoryHotspots(hotspots) {
+        const tbody = document.getElementById('hotspotsTableBody');
+        const topHotspots = hotspots.slice(0, 20);
+
+        tbody.innerHTML = topHotspots.map(h => `
+            <tr>
+                <td><span class="label label-${h.type === 'data_type' ? 'primary' : 'default'}">${h.type}</span></td>
+                <td><code>${escapeHtml(h.identifier)}</code></td>
+                <td><strong>${formatBytes(h.memory_used)}</strong></td>
+                <td>${formatNumber(h.key_count)}</td>
+                <td>
+                    <div class="progress progress-xs">
+                        <div class="progress-bar ${h.percentage > 30 ? 'progress-bar-danger' : h.percentage > 15 ? 'progress-bar-warning' : 'progress-bar-success'}"
+                             style="width: ${Math.min(h.percentage, 100)}%"></div>
+                    </div>
+                    <small>${h.percentage.toFixed(1)}%</small>
+                </td>
+                <td>${formatBytes(h.avg_key_size)}</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderRecommendations(recommendations) {
+        const div = document.getElementById('recommendationsList');
+        document.getElementById('recommendationCount').textContent = recommendations.length;
+
+        if (recommendations.length === 0) {
+            div.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No recommendations at this time</p>';
+            return;
+        }
+
+        div.innerHTML = recommendations.map(r => `
+            <div class="recommendation-card">
+                <div class="priority priority-${r.priority}">${r.priority}</div>
+                <h4 style="margin-top: 0;">${escapeHtml(r.title)}</h4>
+                <div style="margin-bottom: 10px;">
+                    <span class="label label-primary">${r.category}</span>
+                    <span class="badge badge-effort ${r.effort}">${r.effort} effort</span>
+                </div>
+                <p>${escapeHtml(r.description)}</p>
+                <div style="background: #f5f5f5; padding: 10px; border-radius: 3px; margin-top: 10px;">
+                    <strong>Action:</strong> ${escapeHtml(r.action)}
+                </div>
+                ${r.impact ? `<div style="margin-top: 10px;"><strong>Expected Impact:</strong> ${escapeHtml(r.impact)}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function renderKeyPatterns(patterns) {
+        const tbody = document.getElementById('keyPatternsTableBody');
+        const topPatterns = patterns.slice(0, 15);
+
+        tbody.innerHTML = topPatterns.map(p => `
+            <tr>
+                <td><code>${escapeHtml(p.pattern)}</code></td>
+                <td>${formatNumber(p.count)}</td>
+                <td>${formatBytes(p.total_memory)}</td>
+                <td>${p.percentage.toFixed(1)}%</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderTypeEfficiency(efficiency) {
+        const tbody = document.getElementById('typeEfficiencyTableBody');
+
+        const types = Object.keys(efficiency);
+        tbody.innerHTML = types.map(type => {
+            const eff = efficiency[type];
+            const effColor = eff.efficiency >= 70 ? '#00a65a' : eff.efficiency >= 50 ? '#f39c12' : '#dd4b39';
+
+            return `
+                <tr>
+                    <td><strong>${type}</strong></td>
+                    <td>${formatBytes(eff.avg_size)}</td>
+                    <td>${formatBytes(eff.p95_size)}</td>
+                    <td>
+                        <span style="color: ${effColor}; font-weight: 600;">${eff.efficiency.toFixed(1)}%</span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Helper functions
+    function formatBytes(bytes) {
+        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        let i = 0;
+        while (bytes >= 1024 && i < units.length - 1) {
+            bytes /= 1024;
+            i++;
+        }
+        return bytes.toFixed(1) + ' ' + units[i];
+    }
+
+    function formatNumber(num) {
+        if (num < 1000) return num.toString();
+        if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
+        if (num < 1000000000) return (num / 1000000).toFixed(1) + 'M';
+        return (num / 1000000000).toFixed(1) + 'B';
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+})();
+</script>

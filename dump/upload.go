@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/dongmx/rdb"
 	"github.com/julienschmidt/httprouter"
@@ -122,7 +123,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 			progress.SetStatus("parsing")
 
 			// Start decoding in background
-			go func(path, name string, pp *ParseProgress) {
+			go func(path, name string, pp *ParseProgress, fileSize int64) {
 				dec := decoder.NewDecoder()
 				pp.AddLog("Initializing RDB decoder...")
 				pp.SetProgress(5)
@@ -169,6 +170,30 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 				counters.Set(name, counter)
 				log.Printf("Parse completed and counter saved: %v", name)
 
+				// Save to history
+				hm := GetHistoryManager()
+
+				// Calculate totals
+				var totalKeys, totalBytes uint64
+				for _, v := range counter.typeNum {
+					totalKeys += v
+				}
+				for _, v := range counter.typeBytes {
+					totalBytes += v
+				}
+
+				historyEntry := HistoryEntry{
+					Filename:    name,
+					FilePath:    path,
+					UploadTime:  time.Now(),
+					FileSize:    fileSize,
+					TotalKeys:   totalKeys,
+					TotalMemory: totalBytes,
+				}
+				if err := hm.Add(historyEntry); err != nil {
+					log.Printf("Error saving to history: %v", err)
+				}
+
 				pp.AddLog("Analysis complete!")
 				pp.SetProgress(100)
 				pp.SetStatus("completed")
@@ -179,7 +204,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 				} else {
 					tplCommonData["Instances"] = []string{name}
 				}
-			}(destPath, filename, progress)
+			}(destPath, filename, progress, written)
 		} else {
 			log.Printf("File already parsed: %v", filename)
 			instances = append(instances, filename)

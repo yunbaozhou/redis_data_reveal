@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RDR - Redis RDB Analyzer</title>
+    <link rel="stylesheet" href="/static/bootstrap/dist/css/bootstrap.min.css">
+    <link href="/static/plugins/icons/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 30px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .header-section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px 40px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .logo-text {
+            font-size: 42px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+        .title-text {
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+        }
+        .upload-button-area {
+            position: relative;
+        }
+        .btn-upload {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        .file-input {
+            display: none;
+        }
+        .content-section {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+        }
+        .sidebar-section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 25px;
+            height: fit-content;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .history-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .history-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        .history-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        .history-item i {
+            font-size: 14px;
+        }
+        .history-item-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        .main-content-section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            min-height: 600px;
+        }
+        .welcome-screen {
+            text-align: center;
+            padding: 100px 40px;
+        }
+        .welcome-icon {
+            font-size: 120px;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .welcome-text {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .btn-upload-large {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-upload-large:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Upload Modal */
+        .upload-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .upload-modal.active {
+            display: flex;
+        }
+        .upload-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            line-height: 20px;
+        }
+        .modal-close:hover {
+            color: #333;
+        }
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9ff;
+            margin-top: 20px;
+        }
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+        .upload-icon {
+            font-size: 64px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .file-list {
+            margin-top: 20px;
+        }
+        .file-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-analyze {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 10px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-analyze:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .analysis-status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            display: none;
+        }
+        .progress {
+            height: 8px;
+            margin-top: 10px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header-section">
+            <div class="logo-area">
+                <div class="logo-text">RDR</div>
+                <div class="title-text">Redis RDB Analyzer</div>
+            </div>
+            <div class="upload-button-area">
+                <button class="btn-upload" onclick="openUploadModal()">
+                    <i class="fa fa-upload"></i>
+                    Upload RDB File
+                </button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content-section">
+            <!-- Sidebar -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fa fa-history"></i> Analysis History
+                </div>
+                <ul class="history-list" id="historyList">
+                    <li class="empty-state">
+                        <i class="fa fa-inbox"></i>
+                        <div>No files analyzed yet</div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content-section" id="mainContent">
+                <div class="welcome-screen">
+                    <div class="welcome-icon">
+                        <i class="fa fa-database"></i>
+                    </div>
+                    <div class="welcome-title">Welcome to RDR</div>
+                    <div class="welcome-text">
+                        Upload your Redis RDB files to analyze memory usage, key distribution, and more.
+                    </div>
+                    <button class="btn-upload-large" onclick="openUploadModal()">
+                        <i class="fa fa-upload"></i>
+                        Upload Your First RDB File
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="upload-modal" id="uploadModal">
+        <div class="upload-modal-content">
+            <span class="modal-close" onclick="closeUploadModal()">&times;</span>
+            <h2 style="margin-top: 0; color: #333;">Upload RDB Files</h2>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div style="font-size: 20px; color: #333; margin-bottom: 10px; font-weight: 600;">
+                    Drag & Drop RDB Files Here
+                </div>
+                <div style="color: #666; font-size: 14px;">or click to select files</div>
+                <input type="file" id="fileInput" class="file-input" accept=".rdb" multiple>
+            </div>
+
+            <div class="file-list" id="fileList"></div>
+
+            <button class="btn btn-analyze" id="analyzeBtn" disabled>Start Analysis</button>
+
+            <div class="analysis-status" id="analysisStatus">
+                <div id="statusMessage" style="color: #1976d2; font-weight: 600;">Preparing...</div>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                         role="progressbar" style="width: 0%" id="progressBar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script>
+        // Modal functions
+        function openUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+            // Reset upload form
+            selectedFiles = [];
+            document.getElementById('fileList').innerHTML = '';
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('analysisStatus').style.display = 'none';
+        }
+
+        // Load history on page load
+        function loadHistory() {
+            fetch('/list')
+                .then(response => response.json())
+                .then(data => {
+                    const historyList = document.getElementById('historyList');
+                    if (data.instances && data.instances.length > 0) {
+                        historyList.innerHTML = '';
+                        data.instances.forEach(instance => {
+                            const li = document.createElement('li');
+                            li.className = 'history-item';
+                            li.innerHTML = `
+                                <i class="fa fa-file-o"></i>
+                                <span class="history-item-name" title="${instance}">${instance}</span>
+                            `;
+                            li.onclick = () => {
+                                window.location.href = '/instance/' + instance;
+                            };
+                            historyList.appendChild(li);
+                        });
+                    }
+                })
+                .catch(err => console.error('Error loading history:', err));
+        }
+
+        // Upload functionality
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const analysisStatus = document.getElementById('analysisStatus');
+        const statusMessage = document.getElementById('statusMessage');
+        const progressBar = document.getElementById('progressBar');
+
+        let selectedFiles = [];
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            selectedFiles = Array.from(files).filter(file =>
+                file.name.endsWith('.rdb')
+            );
+
+            if (selectedFiles.length === 0) {
+                alert('Please select valid .rdb files');
+                return;
+            }
+
+            displayFiles();
+            analyzeBtn.disabled = false;
+        }
+
+        function displayFiles() {
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div>
+                        <div style="font-weight: 600; color: #333;">${file.name}</div>
+                        <div style="color: #666; font-size: 14px;">${formatBytes(file.size)}</div>
+                    </div>
+                    <button class="btn btn-sm btn-danger" onclick="removeFile(${index})">Remove</button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            displayFiles();
+            if (selectedFiles.length === 0) {
+                analyzeBtn.disabled = true;
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        analyzeBtn.addEventListener('click', () => {
+            if (selectedFiles.length === 0) return;
+
+            analyzeBtn.disabled = true;
+            analysisStatus.style.display = 'block';
+            statusMessage.textContent = 'Uploading files...';
+            progressBar.style.width = '5%';
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('files', file);
+            });
+
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    const uploadPercent = Math.min(percentComplete * 0.7, 70);
+                    progressBar.style.width = uploadPercent + '%';
+                    statusMessage.textContent = `Uploading files... ${Math.round(percentComplete)}%`;
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+
+                        if (result.success) {
+                            statusMessage.textContent = 'Upload successful, parsing...';
+                            progressBar.style.width = '100%';
+
+                            setTimeout(() => {
+                                if (result.instances && result.instances.length > 0) {
+                                    window.location.href = '/instance/' + result.instances[0];
+                                } else {
+                                    window.location.href = '/';
+                                }
+                            }, 1000);
+                        } else {
+                            throw new Error(result.message || 'Upload failed');
+                        }
+                    } catch (error) {
+                        statusMessage.textContent = 'Upload failed: ' + error.message;
+                        progressBar.style.width = '0%';
+                        analyzeBtn.disabled = false;
+                    }
+                } else {
+                    statusMessage.textContent = 'Upload failed: HTTP ' + xhr.status;
+                    progressBar.style.width = '0%';
+                    analyzeBtn.disabled = false;
+                }
+            });
+
+            xhr.addEventListener('error', () => {
+                statusMessage.textContent = 'Upload failed: Network error';
+                progressBar.style.width = '0%';
+                analyzeBtn.disabled = false;
+            });
+
+            xhr.timeout = 30 * 60 * 1000;
+            xhr.open('POST', '/api/upload', true);
+            xhr.send(formData);
+        });
+
+        // Load history when page loads
+        loadHistory();
+
+        // Refresh history every 5 seconds
+        setInterval(loadHistory, 5000);
+    </script>
+</body>
+</html>

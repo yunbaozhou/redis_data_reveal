@@ -1,15 +1,25 @@
 <aside class="main-sidebar">
     <!-- sidebar: style can be found in sidebar.less -->
     <section class="sidebar" style="height: auto;">
+        <!-- Upload button -->
+        <div style="padding: 15px; border-bottom: 1px solid #f4f4f4;">
+            <a href="/" class="btn btn-primary btn-block" style="margin-bottom: 10px;">
+                <i class="fa fa-upload"></i> Upload New File
+            </a>
+        </div>
+
         <!-- sidebar menu: : style can be found in sidebar.less -->
         <ul class="sidebar-menu">
             <li class="header">
-                <center><strong>rdbfiles</strong></center>
+                <center><strong>Analysis History</strong></center>
             </li>
             <li>
                 {{range $instance := $.Instances}}
                 <li {{if eq $instance $.CurrentInstance}}class="active" {{end}}>
-                    <a href="/instance/{{$instance}}"><i class="fa fa-th"></i> <span>{{$instance}}</span></a>
+                    <a href="/instance/{{$instance}}">
+                        <i class="fa fa-file-o"></i>
+                        <span title="{{$instance}}">{{$instance}}</span>
+                    </a>
                 </li>
                 {{end}}
             </li>

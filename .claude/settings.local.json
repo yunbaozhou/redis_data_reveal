@@ -10,7 +10,8 @@
       "Bash(go generate:*)",
       "Bash(./rdr.exe:*)",
       "Bash(taskkill:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(dir:*)"
     ]
   }
 }

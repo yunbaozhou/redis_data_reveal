@@ -49,6 +49,9 @@ func Show(c *cli.Context) {
 		return
 	}
 
+	// Initialize history manager
+	InitHistoryManager("history.json")
+
 	// parse rdbfile
 	fmt.Fprintln(c.App.Writer, "start parsing...")
 	instances := []string{}
@@ -72,6 +75,29 @@ func Show(c *cli.Context) {
 						// init html template
 						// init common data in template
 						tplCommonData["Instances"] = instances
+
+						// Save to history
+						fileInfo, _ := os.Stat(v)
+						hm := GetHistoryManager()
+
+						// Calculate totals
+						var totalKeys, totalBytes uint64
+						for _, v := range counter.typeNum {
+							totalKeys += v
+						}
+						for _, v := range counter.typeBytes {
+							totalBytes += v
+						}
+
+						historyEntry := HistoryEntry{
+							Filename:    filename,
+							FilePath:    v,
+							UploadTime:  time.Now(),
+							FileSize:    fileInfo.Size(),
+							TotalKeys:   totalKeys,
+							TotalMemory: totalBytes,
+						}
+						hm.Add(historyEntry)
 					}
 				}
 
@@ -86,7 +112,17 @@ func Show(c *cli.Context) {
 
 // ShowWeb starts the web server with upload capability
 func ShowWeb(c *cli.Context) {
+	// Initialize history manager
+	InitHistoryManager("history.json")
+
+	// Load instances from history
 	instances := []string{}
+	hm := GetHistoryManager()
+	historyEntries := hm.GetAll()
+	for _, entry := range historyEntries {
+		instances = append(instances, entry.Filename)
+	}
+
 	InitHTMLTmpl()
 	tplCommonData["Instances"] = instances
 
@@ -102,13 +138,20 @@ func startHTTPServer(c *cli.Context, instances []string) {
 	}
 	router := httprouter.New()
 	router.ServeFiles("/static/*filepath", &staticFS)
-	router.GET("/", showUploadPage)
+	router.GET("/", showMainPage)
 	router.GET("/instance/:path", rdbReveal)
 	router.GET("/terminal/:path", showTerminal)
 	router.POST("/api/upload", uploadHandler)
 	router.GET("/list", listInstances)
 	router.GET("/api/progress/:path", progressHandler)
 	router.GET("/api/stream/:path", streamLogsHandler)
+	router.GET("/api/history", historyHandler)
+
+	// Ops analysis endpoints
+	router.GET("/api/ops/analysis/:path", opsAnalysisHandler)
+	router.GET("/api/ops/anomalies/:path", opsAnomaliesHandler)
+	router.GET("/api/ops/recommendations/:path", opsRecommendationsHandler)
+	router.GET("/api/ops/health/:path", opsHealthHandler)
 
 	// Create HTTP server with custom timeouts for large file uploads
 	server := &http.Server{
@@ -131,6 +174,11 @@ func startHTTPServer(c *cli.Context, instances []string) {
 	}
 }
 
+// showMainPage renders the main page with upload capability
+func showMainPage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	http.ServeFile(w, r, "views/main_with_upload.html")
+}
+
 // listInstances returns a list of available instances
 func listInstances(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
@@ -142,4 +190,14 @@ func listInstances(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 		"instances": instances,
 	}
 	json.NewEncoder(w).Encode(response)
+}
+
+// historyHandler returns the analysis history
+func historyHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	w.Header().Set("Content-Type", "application/json")
+	hm := GetHistoryManager()
+	entries := hm.GetAll()
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"history": entries,
+	})
 }

@@ -1,0 +1,34 @@
+[
+  {
+    "filename": "redis_192.168.0.26_2299_group-15_8193_20251211060011.rdb",
+    "filepath": "uploads\\redis_192.168.0.26_2299_group-15_8193_20251211060011.rdb",
+    "upload_time": "2025-12-12T18:11:19.4911968+08:00",
+    "file_size": 1322623513,
+    "total_keys": 982143,
+    "total_memory": 1525827722
+  },
+  {
+    "filename": "redis_192.168.0.26_2299_group-15_8193_20251212172449.rdb",
+    "filepath": "uploads\\redis_192.168.0.26_2299_group-15_8193_20251212172449.rdb",
+    "upload_time": "2025-12-12T22:16:28.6299315+08:00",
+    "file_size": 4809135327,
+    "total_keys": 1006670,
+    "total_memory": 5260667307
+  },
+  {
+    "filename": "public-20251210020012_redis.rdb",
+    "filepath": "uploads\\public-20251210020012_redis.rdb",
+    "upload_time": "2025-12-13T19:41:54.8612038+08:00",
+    "file_size": 500510332,
+    "total_keys": 452253,
+    "total_memory": 588638637
+  },
+  {
+    "filename": "redis_192.168.0.26_2299_group-15_8193_20251208060010.rdb",
+    "filepath": "uploads\\redis_192.168.0.26_2299_group-15_8193_20251208060010.rdb",
+    "upload_time": "2025-12-12T17:13:15.8390301+08:00",
+    "file_size": 2039380615,
+    "total_keys": 1414360,
+    "total_memory": 2347232941
+  }
+]

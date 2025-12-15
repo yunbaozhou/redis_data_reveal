@@ -1,0 +1,136 @@
+<div class="content-wrapper" style="min-height: 100px; height: auto; overflow: visible; width: 100%;">
+    <!-- Tab Navigation -->
+    <div class="col-md-12" style="width: 100%; padding-left: 0; padding-right: 0;">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tab-overview" data-toggle="tab">
+                    <i class="fa fa-dashboard"></i> Overview
+                </a></li>
+                <li><a href="#tab-ops" data-toggle="tab">
+                    <i class="fa fa-heartbeat"></i> Ops Analysis
+                    <span class="label label-warning" id="opsIssuesCount" style="display:none;">0</span>
+                </a></li>
+                <li><a href="#tab-details" data-toggle="tab">
+                    <i class="fa fa-info-circle"></i> Details
+                </a></li>
+            </ul>
+            <div class="tab-content">
+                <!-- Overview Tab -->
+                <div class="tab-pane active" id="tab-overview">
+                    {{template "enhanced_revel.html" .}}
+                </div>
+
+                <!-- Ops Analysis Tab -->
+                <div class="tab-pane" id="tab-ops">
+                    {{template "ops_dashboard.html" .}}
+                </div>
+
+                <!-- Details Tab -->
+                <div class="tab-pane" id="tab-details">
+                    <div class="col-md-12" style="margin-top: 20px; width: 100%; padding-left: 0; padding-right: 0;">
+                        <div class="box">
+                            <div class="box-header with-border">
+                                <h3 class="box-title">Advanced Metrics</h3>
+                            </div>
+                            <div class="box-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h4>Memory Distribution</h4>
+                                        <table class="table table-condensed">
+                                            <tr>
+                                                <td>Total Memory:</td>
+                                                <td><strong>{{humanizeBytes .TotleBytes}}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Total Keys:</td>
+                                                <td><strong>{{humanizeComma .TotleNum}}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Data Types:</td>
+                                                <td><strong>{{len .TypeNum}}</strong></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h4>Type Breakdown</h4>
+                                        <table class="table table-condensed">
+                                            {{range $type, $count := .TypeNum}}
+                                            <tr>
+                                                <td>{{$type}}:</td>
+                                                <td><strong>{{humanizeComma $count}} keys</strong></td>
+                                                <td>{{humanizeBytes (index $.TypeBytes $type)}}</td>
+                                            </tr>
+                                            {{end}}
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load ops issues count for badge
+(function() {
+    const pathParts = window.location.pathname.split('/');
+    const instanceName = pathParts[pathParts.length - 1];
+
+    fetch(`/api/ops/health/${instanceName}`)
+        .then(response => response.json())
+        .then(data => {
+            const totalIssues = data.critical_issues + data.warnings;
+            if (totalIssues > 0) {
+                const badge = document.getElementById('opsIssuesCount');
+                badge.textContent = totalIssues;
+                badge.style.display = 'inline';
+
+                // Change badge color based on severity
+                if (data.critical_issues > 0) {
+                    badge.className = 'label label-danger';
+                } else {
+                    badge.className = 'label label-warning';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading ops health:', error);
+        });
+})();
+</script>
+
+<style>
+/* Layout fixes for tab content */
+.tab-content {
+    width: 100%;
+    overflow: visible;
+}
+
+.tab-pane {
+    width: 100%;
+}
+
+.tab-pane::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.nav-tabs-custom {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.nav-tabs-custom .tab-content {
+    padding: 15px;
+}
+
+/* Ensure all columns are properly contained */
+.content-wrapper > div[class*="col-"],
+.tab-pane > div[class*="col-"] {
+    margin-bottom: 20px;
+}
+</style>

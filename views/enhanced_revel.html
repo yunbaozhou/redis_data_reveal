@@ -1,6 +1,6 @@
-<div class="content-wrapper" style="min-height: 100px; height: auto; overflow: hidden">
+<div class="content-wrapper" style="min-height: 100px; height: auto; overflow: visible; width: 100%;">
     <!-- Summary Cards -->
-    <div class="col-md-12">
+    <div class="col-md-12" style="width: 100%; padding-left: 0; padding-right: 0;">
         <div class="row" style="margin-bottom: 20px;">
             <div class="col-md-3">
                 <div class="info-box bg-aqua">
@@ -42,7 +42,7 @@
     </div>
 
     <!-- Type Distribution Charts -->
-    <div class="col-md-6">
+    <div class="col-md-6" style="width: 50%; float: left; padding-left: 0; padding-right: 7.5px; clear: left;">
         <section class="content-header">
             <div class="box">
                 <div class="box-header with-border">
@@ -57,7 +57,7 @@
         </section>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-6" style="width: 50%; float: left; padding-left: 7.5px; padding-right: 0;">
         <section class="content-header">
             <div class="box">
                 <div class="box-header with-border">
@@ -73,7 +73,7 @@
     </div>
 
     <!-- Length Level Charts -->
-    <div class="col-md-6">
+    <div class="col-md-6" style="width: 50%; float: left; padding-left: 0; padding-right: 7.5px; clear: left;">
         <section class="content-header">
             <div class="box">
                 <div class="box-header with-border">
@@ -101,7 +101,7 @@
         </section>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-6" style="width: 50%; float: left; padding-left: 7.5px; padding-right: 0;">
         <section class="content-header">
             <div class="box">
                 <div class="box-header with-border">
@@ -130,7 +130,7 @@
     </div>
 
     <!-- Top 100 Largest Keys Table -->
-    <div class="col-md-12">
+    <div class="col-md-12" style="width: 100%; padding-left: 0; padding-right: 0; clear: both;">
         <section class="content-header">
             <div class="box">
                 <div class="box-header with-border">
@@ -170,7 +170,7 @@
     </div>
 
     <!-- Key Prefix Analysis -->
-    <div class="col-md-12">
+    <div class="col-md-12" style="width: 100%; padding-left: 0; padding-right: 0; clear: both;">
         <section class="content-header">
             <div class="box">
                 <div class="box-header with-border">
@@ -293,5 +293,24 @@
     .box-title {
         font-size: 18px;
         font-weight: 400;
+    }
+
+    /* Layout fixes to prevent overlapping */
+    .content-wrapper > div[class*="col-"] {
+        margin-bottom: 20px;
+    }
+
+    .content-wrapper::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    .content-wrapper {
+        box-sizing: border-box;
+    }
+
+    .content-wrapper * {
+        box-sizing: border-box;
     }
 </style>
